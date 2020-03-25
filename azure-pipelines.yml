@@ -9,6 +9,7 @@ jobs:
       brew upgrade https://raw.githubusercontent.com/Homebrew/homebrew-core/a6542037a48a55061a4c319e6bb174b3715f7cbe/Formula/mingw-w64.rb
       brew install mingw-w64
       brew install ninja xamarin/xamarin-android-windeps/mingw-zlib p7zip
+      brew install automake make cmake
     displayName: 'Install Tools'
   - bash: |
       mkdir -p out/Darwin
