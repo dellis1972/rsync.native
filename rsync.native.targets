@@ -1,0 +1,16 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <RSyncBundleBinaries Condition=" '$(RSyncBundleBinaries)' == '' ">False</RSyncBundleBinaries>
+    <RSyncToolPath>$(MSBuildThisFileDirectory)$(HostOS)</RSyncToolPath>
+    <RSyncToolExe Condition=" '$(HostOS)' == 'Windows' ">rsync.exe</RSyncToolExe>
+    <RSyncToolExe Condition=" '$(HostOS)' != 'Windows' ">rsync</RSyncToolExe>
+  </PropertyGroup>
+  <ItemGroup>
+    <_RSyncNativeBinaries Include="$(MSBuildThisFileDirectory)**\rsync" />
+    <_RSyncNativeBinaries Include="$(MSBuildThisFileDirectory)**\rsync.exe" />
+    <None Include="@(_RSyncNativeBinaries)" Condition=" '$(RSyncBundleBinaries)' == 'True' ">
+      <Link>%(RecursiveDir)%(FileName)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

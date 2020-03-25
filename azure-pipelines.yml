@@ -1,0 +1,82 @@
+jobs:
+- job: BuildMac
+  displayName: Build MacOS and Android
+  pool:
+    vmImage: xcode9-macos10.13
+  steps:
+  - script: |
+      brew tap xamarin/xamarin-android-windeps
+      brew upgrade https://raw.githubusercontent.com/Homebrew/homebrew-core/a6542037a48a55061a4c319e6bb174b3715f7cbe/Formula/mingw-w64.rb
+      brew install mingw-w64
+      brew install ninja xamarin/xamarin-android-windeps/mingw-zlib p7zip
+      mkdir -p out/Darwin
+      mkdir -p out/Android/armeabi-v7a
+      mkdir -p out/Android/arm64-v8a
+      mkdir -p out/Android/x86
+      mkdir -p out/Android/x86_64
+    displayName: 'Install Tools'
+  - bash: |
+      cd external/rsync
+      ./configure
+      make
+      mv rsync ../../out/Darwin/rsync
+    displayName: 'Build Darwin'
+  - bash: |
+      TARGET=armv7a-linux-androideabi ./build.sh
+      mv external/rsync/rsync out/Android/armeabi-v7a/rsync
+      TARGET=aarch64-linux-android ./build.sh
+      mv external/rsync/rsync out/Android/arm64-v8a/rsync
+      TARGET=i686-linux-android ./build.sh
+      mv external/rsync/rsync out/Android/x86/rsync
+      TARGET=x86_64-linux-android ./build.sh
+      mv external/rsync/rsync out/Android/x86_64/rsync
+    displayName: 'Build Android'
+    env:
+      OUTPUT: $(Build.ArtifactStagingDirectory)
+  - task: ArchiveFiles@2
+    displayName: 'Archive MacOS'
+    inputs:
+      rootFolderOrFile: out
+      includeRootFolder: false 
+      archiveType: 7z
+      archiveFile: $(Build.ArtifactStagingDirectory)/rsync-macos.7z
+  - task: PublishBuildArtifacts@1
+    displayName: upload artifacts
+    inputs:
+      artifactName: rsync
+      pathtoPublish: $(Build.ArtifactStagingDirectory)
+- job: BuildNuget
+  displayName: 'Build Nuget'
+  dependsOn:
+  - BuildMac
+  pool:
+    vmImage: xcode9-macos10.13
+  steps:
+    - script: |
+        brew install p7zip
+      displayName: 'Install Tools'
+    - task: DownloadBuildArtifacts@0
+      displayName: download artifacts
+      inputs:
+        artifactName: rsync
+        downloadPath: $(Build.ArtifactStagingDirectory)
+    - task: ExtractFiles@1
+      displayName: Extract MacOS Native
+      inputs:
+        archiveFilePatterns: $(Build.ArtifactStagingDirectory)/rsync/rsync-macos.7z
+        destinationFolder: xdelta3/build/Darwin
+    - task: DeleteFiles@1
+      displayName: Delete archives
+      inputs:
+          sourceFolder: $(Build.ArtifactStagingDirectory)
+          contents: 'rsync'
+    - task: NuGetCommand@2
+      displayName: package nuget
+      inputs:
+        command: custom
+        arguments: pack rsync/rsync.nuspec -OutputDirectory $(Build.ArtifactStagingDirectory)
+    - task: PublishBuildArtifacts@1
+      displayName: upload artifacts
+      inputs:
+        artifactName: 'nuget'
+        pathtoPublish: $(Build.ArtifactStagingDirectory)
