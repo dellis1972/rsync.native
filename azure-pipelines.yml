@@ -9,12 +9,17 @@ jobs:
       brew upgrade https://raw.githubusercontent.com/Homebrew/homebrew-core/a6542037a48a55061a4c319e6bb174b3715f7cbe/Formula/mingw-w64.rb
       brew install mingw-w64
       brew install ninja xamarin/xamarin-android-windeps/mingw-zlib p7zip
+    displayName: 'Install Tools'
+  - bash: |
       mkdir -p out/Darwin
       mkdir -p out/Android/armeabi-v7a
       mkdir -p out/Android/arm64-v8a
       mkdir -p out/Android/x86
       mkdir -p out/Android/x86_64
-    displayName: 'Install Tools'
+    displayName: 'Create Output Directories'
+  - bash: |
+      git submodule update --init --recursive
+    displayName: "Checkout Rsync"
   - bash: |
       cd external/rsync
       ./configure
