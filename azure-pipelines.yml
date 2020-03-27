@@ -39,6 +39,16 @@ jobs:
     displayName: 'Build Android'
     env:
       OUTPUT: $(Build.ArtifactStagingDirectory)
+  - task: CopyFiles@2
+    inputs:
+      contents: '**/*.log'
+      targetFolder: $(Build.ArtifactStagingDirectory)
+    displayName: 'Copy Logs'
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathToPublish: $(Build.ArtifactStagingDirectory)
+      artifactName: AllLogs
+    displayName: 'Publish Logs'
   - task: ArchiveFiles@2
     displayName: 'Archive MacOS'
     inputs:
